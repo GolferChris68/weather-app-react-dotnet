@@ -29,10 +29,21 @@ Follow `skills/wind-display.skill.md` for full conventions. Summary:
 
 ---
 
+## Weather Icon
+
+- Each weather condition has an animated SVG icon rendered by `WeatherIcon.tsx`
+- Icon is decorative (`aria-hidden="true"`) — the condition text label is authoritative
+- Animations must be wrapped in `@media (prefers-reduced-motion: no-preference)`
+- See `skills/weather-icons.skill.md` for the full category map, SVG shapes, and keyframe patterns
+
+---
+
 ## Layout
 
-- Single-column, centered layout optimized for mobile and desktop
-- Maximum content width: 480px
+- The `WeatherCard` uses a three-zone layout: full-width header (location), two-column body
+  (icon left, condition data right), full-width footer (timestamp + Refresh button)
+- On viewports narrower than 360 px the two body columns stack vertically (icon above data)
+- Maximum card width: 480px, centered
 - Generous whitespace — this is a focused, single-purpose app
 - No navigation, no sidebar, no header/footer chrome
 

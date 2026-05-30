@@ -1,6 +1,6 @@
 # Spec: Weather App
 
-**Version**: 1.1
+**Version**: 1.2
 **Status**: Ready for implementation
 **Stack**: React (TypeScript) + ASP.NET Core 8 Minimal API + Open-Meteo + Nominatim
 
@@ -40,6 +40,8 @@ There is no user authentication. No data is persisted. The app is stateless.
 - Wind speed is displayed in mph
 - Wind direction is displayed as a cardinal or intercardinal label (N, NE, E, SE, S, SW, W, NW) alongside the degrees value
 - A weather condition label is shown (e.g. "Clear", "Partly Cloudy", "Rain") derived from Open-Meteo's WMO weather code
+- An animated weather icon is displayed alongside the condition label, sized and animated per the
+  split-layout described in §6 and `skills/weather-icons.skill.md`
 - Location name is displayed as "City, State" for US locations or "City, Country" for international
   locations (e.g. "Philadelphia, PA" or "London, United Kingdom"), derived from Nominatim reverse geocoding
 - If reverse geocoding fails, display the coordinates as a fallback (e.g. "39.95°N, 75.16°W") —
@@ -73,7 +75,8 @@ There is no user authentication. No data is persisted. The app is stateless.
 /frontend
   /src
     /components
-      WeatherCard.tsx         # Main display component
+      WeatherCard.tsx         # Main display component — split layout
+      WeatherIcon.tsx         # Animated condition icon (pure CSS, no external deps)
       WindDisplay.tsx         # Wind speed + direction
       TemperatureDisplay.tsx  # Dual °F / °C display
       LoadingIndicator.tsx
@@ -229,7 +232,81 @@ See `skills/reverse-geocoding.skill.md` for full implementation details.
 
 ---
 
-## 6. CORS Configuration
+## 6. Weather Icon Display
+
+### 6.1 Split Layout
+
+The `WeatherCard` uses a three-zone layout:
+
+```
+┌──────────────────────────────────────┐
+│           Philadelphia, PA           │  ← full-width location header
+│         © OpenStreetMap…             │
+├─────────────────┬────────────────────┤
+│                 │  Clear Sky         │  ← left: icon  right: condition data
+│   [  icon  ]   │  69.4°F / 20.8°C  │
+│   (animated)   │  12.7 mph SSW      │
+│                 │  (206°)            │
+├─────────────────┴────────────────────┤
+│    Updated at 10:54 PM   [Refresh]  │  ← full-width footer
+└──────────────────────────────────────┘
+```
+
+- Left column: `WeatherIcon` component, fixed width ~120 px
+- Right column: condition label, `TemperatureDisplay`, `WindDisplay`
+- Responsive: below 360 px viewport width, the two columns stack vertically
+  (icon centered above data)
+
+### 6.2 WeatherIcon Component
+
+```typescript
+interface WeatherIconProps {
+  weatherCode: number;
+}
+```
+
+The icon is **decorative** — it supplements the text label, which is the
+authoritative description. Mark it `aria-hidden="true"`. Do not add an
+`aria-label` to the icon itself; the adjacent condition text already
+conveys the meaning.
+
+### 6.3 Icon Categories
+
+Map WMO codes to one of 8 visual categories. Each category has a distinct
+SVG shape and CSS animation:
+
+| Category | WMO Codes | Shape | Animation |
+|---|---|---|---|
+| `clear` | 0 | Sun disc + rays | Rays rotate slowly (60 s) |
+| `mainly-clear` | 1 | Sun + small cloud | Sun pulses gently (4 s) |
+| `partly-cloudy` | 2 | Sun half-behind cloud | Cloud drifts left/right (6 s) |
+| `overcast` | 3 | Flat cloud | Cloud drifts left/right (8 s) |
+| `foggy` | 45, 48 | Three wavy lines | Lines fade in/out in sequence (3 s) |
+| `rainy` | 51–65, 80–82 | Cloud + raindrops | Drops fall and fade (1.2 s staggered) |
+| `snowy` | 71–77, 85–86 | Cloud + snowflakes | Flakes fall and rotate (2 s staggered) |
+| `stormy` | 95, 96, 99 | Dark cloud + lightning | Lightning flashes (3 s) |
+
+Any unmapped code renders the `overcast` icon as a safe fallback.
+
+### 6.4 Implementation Rules
+
+- **No external packages** — icons are inline SVG rendered by React, animated
+  with CSS `@keyframes` in a `.module.css` file
+- **No `<img>` tags** for the icons — inline SVG only, so CSS animations apply
+- Animations must **respect `prefers-reduced-motion`**: wrap all `@keyframes`
+  usage in a `@media (prefers-reduced-motion: no-preference)` block so motion
+  is opt-in, not opt-out
+- Icon size: `96px × 96px` in the split layout; scales down to `72px` on
+  narrow viewports
+- Colors: use CSS custom properties from `index.css` so icons respect any
+  future theme changes
+
+See `skills/weather-icons.skill.md` for SVG shapes, keyframe patterns, and
+the full WMO code → category mapping.
+
+---
+
+## 7. CORS Configuration
 
 The backend must allow requests from the React dev server (`http://localhost:5173`) in development. In production, CORS should be restricted to the actual frontend origin.
 
@@ -237,7 +314,7 @@ Configure in `Program.cs` using named CORS policies.
 
 ---
 
-## 7. Open Questions
+## 8. Open Questions
 
 | # | Question | Status |
 |---|---|---|
@@ -247,7 +324,7 @@ Configure in `Program.cs` using named CORS policies.
 
 ---
 
-## 8. Non-Goals (Out of Scope)
+## 9. Non-Goals (Out of Scope)
 
 - Forecast / multi-day weather
 - User accounts or saved locations
@@ -257,9 +334,8 @@ Configure in `Program.cs` using named CORS policies.
 
 ---
 
-## 9. Stretch Goals (Do Not Implement Until Core Is Complete)
+## 10. Stretch Goals (Do Not Implement Until Core Is Complete)
 
 - Dark/light mode toggle
-- Weather condition icon or animation
 - Manual location search fallback (OQ-3)
 - Auto-refresh timer (OQ-2)
