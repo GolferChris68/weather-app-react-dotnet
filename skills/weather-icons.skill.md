@@ -20,10 +20,17 @@ colours for future theming.
 ```typescript
 interface WeatherIconProps {
   weatherCode: number;
+  isDay: boolean;
 }
 
-export function WeatherIcon({ weatherCode }: WeatherIconProps) { … }
+export function WeatherIcon({ weatherCode, isDay }: WeatherIconProps) { … }
 ```
+
+`isDay` comes from Open-Meteo's `is_day` field, mapped to a boolean by the
+backend (`IsDay = current.IsDay == 1`). Use it to select day vs. night
+variants for `clear`, `mainly-clear`, and `partly-cloudy` icons. All other
+categories (overcast, foggy, rainy, snowy, stormy) render the same
+regardless of time of day.
 
 The icon is **purely decorative** — the adjacent condition text label is
 the authoritative description. Always render with `aria-hidden="true"`.
@@ -66,36 +73,56 @@ export function getIconCategory(code: number): IconCategory {
 All icons fit a `96 × 96` viewBox. Use CSS custom properties for colour
 so the icons inherit any future theme changes.
 
-### `clear` — Sun with rays
+### `clear` (day) — Sun with rays
 
-```svg
-<svg viewBox="0 0 96 96" aria-hidden="true">
-  <!-- Disc -->
-  <circle cx="48" cy="48" r="18" fill="var(--icon-sun)" />
-  <!-- 8 rays as a group that rotates -->
-  <g class={styles.rotate}>
-    <line x1="48" y1="8"  x2="48" y2="20" stroke="var(--icon-sun)" stroke-width="4" stroke-linecap="round"/>
-    <line x1="48" y1="76" x2="48" y2="88" stroke="var(--icon-sun)" stroke-width="4" stroke-linecap="round"/>
-    <line x1="8"  y1="48" x2="20" y2="48" stroke="var(--icon-sun)" stroke-width="4" stroke-linecap="round"/>
-    <line x1="76" y1="48" x2="88" y2="48" stroke="var(--icon-sun)" stroke-width="4" stroke-linecap="round"/>
-    <line x1="19" y1="19" x2="28" y2="28" stroke="var(--icon-sun)" stroke-width="4" stroke-linecap="round"/>
-    <line x1="68" y1="68" x2="77" y2="77" stroke="var(--icon-sun)" stroke-width="4" stroke-linecap="round"/>
-    <line x1="77" y1="19" x2="68" y2="28" stroke="var(--icon-sun)" stroke-width="4" stroke-linecap="round"/>
-    <line x1="28" y1="68" x2="19" y2="77" stroke="var(--icon-sun)" stroke-width="4" stroke-linecap="round"/>
-  </g>
-</svg>
+```tsx
+// Disc at centre; rays group uses styles.rotate (CSS handles transform-box).
+// IMPORTANT: Do NOT add an inline transformOrigin to the rays <g>.
+// CSS sets transform-box:fill-box + transform-origin:center, which is
+// interpreted relative to the fill-box. An inline pixel value would be
+// offset from the fill-box origin, not the SVG viewport, causing the
+// rotation to orbit around the wrong point.
+<SunDisc cx={48} cy={48} r={16} />
+<SunRays cx={48} cy={48} inner={22} outer={34} />  {/* rays rotate 60 s */}
 ```
 
-### `mainly-clear` — Sun with small cloud
+### `clear` (night) — Crescent moon
 
-Same sun as above (smaller, offset to top-left at cx=38 cy=38 r=14),
-plus a small white cloud shape in the bottom-right quadrant. Sun pulses
-gently.
+```tsx
+// SVG mask: outer disc minus an offset inner disc to create a crescent.
+// Use a single static mask ID — only one WeatherIcon renders at a time.
+<defs>
+  <mask id="weather-icon-moon-mask">
+    <circle cx={48} cy={48} r={18} fill="white" />
+    <circle cx={56} cy={42} r={14} fill="black" />  {/* offset = r*0.44, r*0.33 */}
+  </mask>
+</defs>
+<circle cx={48} cy={48} r={18} fill="var(--icon-moon)" mask="url(#weather-icon-moon-mask)" />
+```
 
-### `partly-cloudy` — Sun behind cloud
+Inner circle offset formula: `ox = round(r * 0.44)`, `oy = round(r * 0.33)`,
+`innerR = round(r * 0.78)`. Apply consistently for all moon sizes.
 
-Sun (cx=34 cy=40 r=16) partially occluded by a larger cloud in the
-foreground. Cloud drifts horizontally.
+### `mainly-clear` (day) — Sun with small cloud
+
+Sun (cx=32, cy=36, r=12) in top-left, small cloud in bottom-right. Sun
+group uses `styles.pulse` — **no inline transformOrigin** (same reason as
+rays: CSS `fill-box + center` handles it correctly). Cloud drifts (6 s).
+
+### `mainly-clear` (night) — Moon with small cloud
+
+Moon (cx=32, cy=36, r=12) in top-left, same small cloud in bottom-right.
+No pulse animation. Cloud drifts (6 s).
+
+### `partly-cloudy` (day) — Sun behind cloud
+
+Sun (cx=30, cy=38, r=16) partially occluded by a larger cloud in the
+foreground. Cloud drifts horizontally (6 s).
+
+### `partly-cloudy` (night) — Moon behind cloud
+
+Moon (cx=30, cy=38, r=14) in the same position as the day sun, occluded
+by the same foreground cloud. Cloud drifts horizontally (6 s).
 
 ### `overcast` — Flat cloud
 
@@ -167,12 +194,29 @@ Add these to `:root` in `index.css`:
   --icon-snow:       #bfdbfe;   /* blue-200  */
   --icon-lightning:  #fbbf24;   /* amber-400 */
   --icon-fog:        #cbd5e1;   /* slate-300 */
+  --icon-moon:       #e2e8f0;   /* slate-200 — silvery crescent */
 }
 ```
 
 ---
 
 ## Animation Rules
+
+### transform-box and transform-origin
+
+Classes `.rotate`, `.pulse`, `.drift`, `.driftSlow` all set
+`transform-box: fill-box; transform-origin: center` in the CSS module.
+With `fill-box`, any **inline** `transformOrigin` value in pixels is
+interpreted relative to the element's own bounding box, not the SVG
+viewport. This causes the animation pivot to be offset from the intended
+centre. **Never add an inline `style={{ transformOrigin: … }}`** to a
+`<g>` that carries one of these classes — the CSS alone is sufficient.
+
+For elements whose keyframe includes `rotate()` but that are **not** in
+the `fill-box` classes (e.g. individual snowflakes animated with
+`translateY + rotate`), the inline `transformOrigin` **is correct** because
+those elements default to `transform-box: view-box`, so the pixel value
+is interpreted in SVG viewport coordinates.
 
 ### Reduced motion
 

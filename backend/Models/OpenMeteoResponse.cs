@@ -21,4 +21,7 @@ public class OpenMeteoCurrent
 
     [JsonPropertyName("weather_code")]
     public int WeatherCode { get; set; }
+
+    [JsonPropertyName("is_day")]
+    public int IsDay { get; set; }
 }

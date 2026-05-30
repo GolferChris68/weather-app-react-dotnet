@@ -10,5 +10,6 @@ public class WeatherResponse
     public int WeatherCode { get; set; }
     public string WeatherLabel { get; set; } = string.Empty;
     public string? LocationName { get; set; }
+    public bool IsDay { get; set; }
     public DateTime FetchedAtUtc { get; set; }
 }

@@ -6,6 +6,7 @@ export interface WeatherData {
   windDirectionCardinal: string;
   weatherCode: number;
   weatherLabel: string;
+  isDay: boolean;
   locationName: string | null;
   fetchedAtUtc: string;
 }

@@ -44,7 +44,7 @@ export function WeatherCard({ data, latitude, longitude, onRefresh }: Props) {
       {/* Zone 2 — split body: icon left, data right */}
       <div className={styles.body}>
         <div className={styles.iconCol}>
-          <WeatherIcon weatherCode={data.weatherCode} />
+          <WeatherIcon weatherCode={data.weatherCode} isDay={data.isDay} />
         </div>
         <div className={styles.dataCol}>
           <p className={styles.condition}>{data.weatherLabel}</p>

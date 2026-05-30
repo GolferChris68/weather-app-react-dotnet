@@ -2,7 +2,7 @@
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .primary {
@@ -10,6 +10,7 @@
   font-weight: 700;
   color: var(--color-text-primary);
   line-height: 1;
+  margin-left: -0.08em;
 }
 
 .separator {

@@ -1,7 +1,7 @@
 import { getIconCategory } from '../utils/iconCategory';
 import styles from './WeatherIcon.module.css';
 
-type Props = { weatherCode: number };
+type Props = { weatherCode: number; isDay: boolean };
 
 // ── Shared SVG primitives ────────────────────────────────────────────
 
@@ -11,9 +11,12 @@ function SunDisc({ cx, cy, r }: { cx: number; cy: number; r: number }) {
   return <circle cx={cx} cy={cy} r={r} fill="var(--icon-sun)" />;
 }
 
+// Rays rotate around their own bounding-box centre via CSS transform-box:fill-box.
+// Do NOT add an inline transformOrigin — it is interpreted in fill-box coordinates
+// and will offset the rotation origin away from the disc centre.
 function SunRays({ cx, cy, inner, outer }: { cx: number; cy: number; inner: number; outer: number }) {
   return (
-    <g className={styles.rotate} style={{ transformOrigin: `${cx}px ${cy}px` }}>
+    <g className={styles.rotate}>
       {Array.from({ length: 8 }, (_, i) => {
         const a = (i * 45 * Math.PI) / 180;
         return (
@@ -26,6 +29,27 @@ function SunRays({ cx, cy, inner, outer }: { cx: number; cy: number; inner: numb
         );
       })}
     </g>
+  );
+}
+
+// Crescent moon via SVG mask: outer disc minus an offset inner disc.
+// A single static MOON_MASK_ID is safe because only one WeatherIcon renders at a time.
+const MOON_MASK_ID = 'weather-icon-moon-mask';
+
+function MoonDisc({ cx, cy, r }: { cx: number; cy: number; r: number }) {
+  const ox = Math.round(r * 0.44);
+  const oy = Math.round(r * 0.33);
+  const innerR = Math.round(r * 0.78);
+  return (
+    <>
+      <defs>
+        <mask id={MOON_MASK_ID}>
+          <circle cx={cx} cy={cy} r={r} fill="white" />
+          <circle cx={cx + ox} cy={cy - oy} r={innerR} fill="black" />
+        </mask>
+      </defs>
+      <circle cx={cx} cy={cy} r={r} fill="var(--icon-moon)" mask={`url(#${MOON_MASK_ID})`} />
+    </>
   );
 }
 
@@ -54,10 +78,10 @@ const C_UPPER = 'M12,56 Q12,46 22,46 Q24,34 38,34 Q52,34 54,44 Q58,38 66,42 Q74,
 // Smaller cloud for "mainly clear" (lower-right quadrant)
 const C_SMALL = 'M34,76 Q34,68 42,68 Q44,60 54,60 Q62,60 64,68 Q70,64 76,68 Q82,68 82,76 Q82,80 76,80 L40,80 Q34,80 34,76Z';
 
-// Foreground cloud for "partly cloudy" (covers lower-right, overlaps sun)
+// Foreground cloud for "partly cloudy" (covers lower-right, overlaps sun/moon)
 const C_FRONT = 'M22,70 Q22,60 32,60 Q34,48 48,48 Q62,48 64,58 Q68,52 76,56 Q84,56 84,66 Q84,74 76,74 L30,74 Q22,74 22,70Z';
 
-// ── Icon renderers ───────────────────────────────────────────────────
+// ── Day icon renderers ───────────────────────────────────────────────
 
 function IconClear() {
   return (
@@ -68,10 +92,11 @@ function IconClear() {
   );
 }
 
+// pulse group has no inline transformOrigin — CSS fill-box centres it on the sun
 function IconMainlyClear() {
   return (
     <>
-      <g className={styles.pulse} style={{ transformOrigin: '32px 36px' }}>
+      <g className={styles.pulse}>
         <SunDisc cx={32} cy={36} r={12} />
         <SunRays cx={32} cy={36} inner={18} outer={27} />
       </g>
@@ -89,6 +114,32 @@ function IconPartlyCloudy() {
     </>
   );
 }
+
+// ── Night icon renderers ─────────────────────────────────────────────
+
+function IconClearNight() {
+  return <MoonDisc cx={48} cy={48} r={18} />;
+}
+
+function IconMainlyClearNight() {
+  return (
+    <>
+      <MoonDisc cx={32} cy={36} r={12} />
+      <Cloud d={C_SMALL} className={styles.drift} />
+    </>
+  );
+}
+
+function IconPartlyCloudyNight() {
+  return (
+    <>
+      <MoonDisc cx={30} cy={38} r={14} />
+      <Cloud d={C_FRONT} className={styles.drift} />
+    </>
+  );
+}
+
+// ── Condition-independent renderers ─────────────────────────────────
 
 function IconOvercast() {
   return <Cloud d={C_LARGE} className={styles.driftSlow} />;
@@ -143,14 +194,17 @@ function IconStormy() {
 
 // ── Main component ───────────────────────────────────────────────────
 
-export function WeatherIcon({ weatherCode }: Props) {
+export function WeatherIcon({ weatherCode, isDay }: Props) {
   const category = getIconCategory(weatherCode);
 
   const inner = (() => {
     switch (category) {
-      case 'clear':         return <IconClear />;
-      case 'mainly-clear':  return <IconMainlyClear />;
-      case 'partly-cloudy': return <IconPartlyCloudy />;
+      case 'clear':
+        return isDay ? <IconClear /> : <IconClearNight />;
+      case 'mainly-clear':
+        return isDay ? <IconMainlyClear /> : <IconMainlyClearNight />;
+      case 'partly-cloudy':
+        return isDay ? <IconPartlyCloudy /> : <IconPartlyCloudyNight />;
       case 'overcast':      return <IconOvercast />;
       case 'foggy':         return <IconFoggy />;
       case 'rainy':         return <IconRainy />;

@@ -135,6 +135,7 @@ Response schema:
   "windDirectionCardinal": "WSW",
   "weatherCode": 2,
   "weatherLabel": "Partly Cloudy",
+  "isDay": true,
   "locationName": "Philadelphia, PA",
   "fetchedAtUtc": "2026-05-29T14:23:00Z"
 }
@@ -177,7 +178,7 @@ failure is non-fatal: log a warning and set `locationName` to `null`.
 ```
 latitude={lat}
 longitude={lon}
-current=temperature_2m,wind_speed_10m,wind_direction_10m,weather_code
+current=temperature_2m,wind_speed_10m,wind_direction_10m,weather_code,is_day
 temperature_unit=celsius
 wind_speed_unit=mph
 ```
@@ -253,17 +254,23 @@ The `WeatherCard` uses a three-zone layout:
 ```
 
 - Left column: `WeatherIcon` component, fixed width ~120 px
-- Right column: condition label, `TemperatureDisplay`, `WindDisplay`
+- Right column: condition label, `TemperatureDisplay`, `WindDisplay` — all
+  left-aligned within the column (`justify-content: flex-start` on the
+  temperature container; no centering on any data-column child)
 - Responsive: below 360 px viewport width, the two columns stack vertically
-  (icon centered above data)
+  (icon centered above data; data column switches to `align-items: center`
+  and `text-align: center`)
 
 ### 6.2 WeatherIcon Component
 
 ```typescript
 interface WeatherIconProps {
   weatherCode: number;
+  isDay: boolean;
 }
 ```
+
+`isDay` is sourced from Open-Meteo's `is_day` field (1 = day, 0 = night), mapped to a boolean by the backend and passed through `WeatherData`.
 
 The icon is **decorative** — it supplements the text label, which is the
 authoritative description. Mark it `aria-hidden="true"`. Do not add an
@@ -273,18 +280,19 @@ conveys the meaning.
 ### 6.3 Icon Categories
 
 Map WMO codes to one of 8 visual categories. Each category has a distinct
-SVG shape and CSS animation:
+SVG shape and CSS animation. The first three categories have day and night
+variants driven by the `isDay` prop:
 
-| Category | WMO Codes | Shape | Animation |
-|---|---|---|---|
-| `clear` | 0 | Sun disc + rays | Rays rotate slowly (60 s) |
-| `mainly-clear` | 1 | Sun + small cloud | Sun pulses gently (4 s) |
-| `partly-cloudy` | 2 | Sun half-behind cloud | Cloud drifts left/right (6 s) |
-| `overcast` | 3 | Flat cloud | Cloud drifts left/right (8 s) |
-| `foggy` | 45, 48 | Three wavy lines | Lines fade in/out in sequence (3 s) |
-| `rainy` | 51–65, 80–82 | Cloud + raindrops | Drops fall and fade (1.2 s staggered) |
-| `snowy` | 71–77, 85–86 | Cloud + snowflakes | Flakes fall and rotate (2 s staggered) |
-| `stormy` | 95, 96, 99 | Dark cloud + lightning | Lightning flashes (3 s) |
+| Category | WMO Codes | Day shape | Night shape | Animation |
+|---|---|---|---|---|
+| `clear` | 0 | Sun disc + rays | Crescent moon | Rays rotate slowly (60 s); moon is static |
+| `mainly-clear` | 1 | Sun + small cloud | Moon + small cloud | Day: sun pulses (4 s); Night: cloud drifts (6 s) |
+| `partly-cloudy` | 2 | Sun half-behind cloud | Moon half-behind cloud | Cloud drifts left/right (6 s) |
+| `overcast` | 3 | Flat cloud | — (same) | Cloud drifts left/right (8 s) |
+| `foggy` | 45, 48 | Three wavy lines | — (same) | Lines fade in/out in sequence (3 s) |
+| `rainy` | 51–65, 80–82 | Cloud + raindrops | — (same) | Drops fall and fade (1.2 s staggered) |
+| `snowy` | 71–77, 85–86 | Cloud + snowflakes | — (same) | Flakes fall and rotate (2 s staggered) |
+| `stormy` | 95, 96, 99 | Dark cloud + lightning | — (same) | Lightning flashes (3 s) |
 
 Any unmapped code renders the `overcast` icon as a safe fallback.
 

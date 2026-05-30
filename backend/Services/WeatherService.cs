@@ -26,7 +26,7 @@ public class WeatherService : IWeatherService
     public async Task<WeatherResponse> GetCurrentWeatherAsync(double lat, double lon, CancellationToken ct)
     {
         var url = $"v1/forecast?latitude={lat}&longitude={lon}" +
-                  "&current=temperature_2m,wind_speed_10m,wind_direction_10m,weather_code" +
+                  "&current=temperature_2m,wind_speed_10m,wind_direction_10m,weather_code,is_day" +
                   "&temperature_unit=celsius&wind_speed_unit=mph&timezone=auto";
 
         HttpResponseMessage response;
@@ -82,6 +82,7 @@ public class WeatherService : IWeatherService
             WindDirectionCardinal = DegreesToCardinal(current.WindDirection10m),
             WeatherCode = current.WeatherCode,
             WeatherLabel = GetWeatherLabel(current.WeatherCode),
+            IsDay = current.IsDay == 1,
             FetchedAtUtc = DateTime.UtcNow
         };
     }
