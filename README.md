@@ -1,6 +1,25 @@
 # Weather App
 
-A full-stack weather application that shows current conditions at your location — temperature, wind, and sky conditions — with a clean, accessible UI.
+A full-stack weather application that shows current conditions at your location — with an animated condition icon, dual-unit temperature, wind, and reverse-geocoded location name.
+
+## UI
+
+The weather card uses a three-zone layout:
+
+```
+┌─────────────────────────────────────┐
+│          Philadelphia, PA           │
+│        © OpenStreetMap…             │
+├──────────────┬──────────────────────┤
+│              │  Clear Sky           │
+│   ☀ (anim) │  69.1°F / 20.6°C    │
+│              │  12 mph SSW (209°)   │
+├──────────────┴──────────────────────┤
+│  Updated at 11:08 PM    [Refresh]  │
+└─────────────────────────────────────┘
+```
+
+Eight animated SVG icons cover all WMO weather codes — rotating sun, drifting clouds, falling rain, falling snow, fading fog lines, and flashing lightning. All animations respect `prefers-reduced-motion`.
 
 ## Stack
 
@@ -14,11 +33,12 @@ A full-stack weather application that shows current conditions at your location 
 ## Features
 
 - Requests browser location with an explicit user action (no silent auto-request)
-- Displays temperature in both **°F and °C** simultaneously
-- Wind speed in mph with 16-point cardinal direction (e.g. `13 mph SSW (207°)`)
-- Reverse-geocoded location name (e.g. `Philadelphia, PA`)
+- Animated SVG weather icon matched to current conditions (8 categories, pure CSS — no external packages)
+- Temperature in both **°F and °C** simultaneously
+- Wind speed in mph with 16-point cardinal direction (e.g. `12 mph SSW (209°)`)
+- Reverse-geocoded location name (e.g. `Philadelphia, PA`); falls back to coordinates if unavailable
 - Full error handling for all geolocation and network failure modes
-- Accessible: `role="status"`, `aria-live`, `aria-label`, visible focus styles throughout
+- Accessible: `aria-hidden` on decorative icons, `role="status"`, `aria-live`, visible focus styles throughout
 
 ## Project Structure
 
@@ -38,13 +58,13 @@ A full-stack weather application that shows current conditions at your location 
 │
 ├── frontend/                  # React / TypeScript / Vite
 │   └── src/
-│       ├── components/        # WeatherCard, WindDisplay, TemperatureDisplay, …
+│       ├── components/        # WeatherCard, WeatherIcon, WindDisplay, TemperatureDisplay, …
 │       ├── hooks/             # useGeolocation, useWeather
-│       ├── utils/             # windDirection, weatherCode, coordinates
+│       ├── utils/             # windDirection, weatherCode, iconCategory, coordinates
 │       └── types/             # weather.ts
 │
-├── specs/                     # Feature spec
-├── skills/                    # Implementation guides (geolocation, wind, geocoding)
+├── specs/                     # Feature spec (v1.2)
+├── skills/                    # Implementation guides (geolocation, wind, geocoding, icons)
 ├── standards/                 # Code standards (frontend, backend, error handling, UI/UX)
 └── guardrails/                # Hard constraints for AI-assisted development
 ```
@@ -104,6 +124,7 @@ GET /api/weather?lat={latitude}&lon={longitude}
 ## Design Decisions
 
 - **No API keys** — both Open-Meteo and Nominatim are free and keyless
+- **No external icon packages** — weather icons are inline SVG animated with CSS `@keyframes`
 - **Backend-only external calls** — the frontend never calls third-party APIs directly
 - **Parallel upstream requests** — weather and geocoding calls run concurrently via `Task.WhenAll`
 - **Non-fatal geocoding** — a Nominatim failure logs a warning and returns `null`; weather data is always returned
