@@ -10,7 +10,8 @@ All changes go on a feature branch, never directly on `master`.
 1. Create a branch from the latest `master`: `git checkout -b feature/<name>`
 2. Commit work there as usual
 3. Push the branch: `git push -u origin feature/<name>`
-4. Open a PR targeting `master` via `gh pr create`
+4. Open a PR targeting `master` via `& "C:\Program Files\GitHub CLI\gh.exe" pr create`
+   (`gh` is not on the Bash PATH; always invoke it via PowerShell with the full path above)
 
 Do not `git push` to `master` directly. Do not merge the branch yourself — leave that to the user.
 
