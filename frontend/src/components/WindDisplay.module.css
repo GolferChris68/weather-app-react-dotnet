@@ -1,0 +1,10 @@
+.wind {
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.degrees {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}

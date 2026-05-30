@@ -1,0 +1,25 @@
+.container {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.primary {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.separator {
+  font-size: 2rem;
+  color: var(--color-text-secondary);
+  font-weight: 300;
+}
+
+.secondary {
+  font-size: 2rem;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
