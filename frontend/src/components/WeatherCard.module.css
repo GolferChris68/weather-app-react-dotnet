@@ -1,12 +1,12 @@
 .card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
   width: 100%;
 }
 
-.locationRow {
+/* ── Zone 1: Header ────────────────────────────────────────────── */
+.header {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -42,11 +42,41 @@
   border-radius: 2px;
 }
 
+/* ── Zone 2: Split body ────────────────────────────────────────── */
+.body {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 0 1.25rem;
+  align-items: center;
+}
+
+.iconCol {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.dataCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
 .condition {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
+  font-weight: 500;
   color: var(--color-text-secondary);
   margin: 0;
-  font-weight: 500;
+}
+
+/* ── Zone 3: Footer ────────────────────────────────────────────── */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
 }
 
 .fetchedAt {
@@ -56,9 +86,8 @@
 }
 
 .refreshButton {
-  margin-top: 0.5rem;
-  padding: 0.625rem 1.5rem;
-  font-size: 0.9rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-accent);
   background-color: transparent;
@@ -67,6 +96,7 @@
   cursor: pointer;
   min-height: 44px;
   min-width: 44px;
+  white-space: nowrap;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
@@ -78,4 +108,19 @@
 .refreshButton:focus-visible {
   outline: 3px solid var(--color-accent);
   outline-offset: 3px;
+}
+
+/* ── Narrow viewports: stack icon above data ───────────────────── */
+@media (max-width: 360px) {
+  .body {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 0.75rem 0;
+  }
+
+  .dataCol {
+    align-items: center;
+    text-align: center;
+    width: 100%;
+  }
 }

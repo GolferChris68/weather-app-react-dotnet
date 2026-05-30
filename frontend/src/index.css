@@ -17,6 +17,14 @@
   --color-error-border: #fc8181;
   --color-error-text: #c53030;
 
+  --icon-sun:         #f59e0b;
+  --icon-cloud:       #94a3b8;
+  --icon-cloud-dark:  #475569;
+  --icon-rain:        #60a5fa;
+  --icon-snow:        #bfdbfe;
+  --icon-lightning:   #fbbf24;
+  --icon-fog:         #cbd5e1;
+
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   font-size: 16px;
   line-height: 1.5;

@@ -1,0 +1,73 @@
+.icon {
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+/* ── Transform anchoring for animated groups ─────────────────────── */
+.rotate,
+.pulse,
+.drift,
+.driftSlow {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* ── Keyframe definitions ────────────────────────────────────────── */
+@keyframes rotateFull {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes gentlePulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.1); }
+}
+
+@keyframes cloudDrift {
+  0%, 100% { transform: translateX(0); }
+  50%       { transform: translateX(4px); }
+}
+
+@keyframes fall {
+  0%   { transform: translateY(0);    opacity: 1; }
+  70%  { opacity: 0.5; }
+  100% { transform: translateY(14px); opacity: 0; }
+}
+
+@keyframes snowfall {
+  0%   { transform: translateY(0) rotate(0deg);   opacity: 1; }
+  100% { transform: translateY(14px) rotate(40deg); opacity: 0; }
+}
+
+@keyframes flash {
+  0%, 80%, 100% { opacity: 1; }
+  83%, 97%      { opacity: 0.05; }
+}
+
+@keyframes fogFade {
+  0%, 100% { opacity: 0.35; }
+  50%       { opacity: 1; }
+}
+
+/* ── Apply animations only when motion is acceptable ─────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .rotate    { animation: rotateFull  60s  linear       infinite; }
+  .pulse     { animation: gentlePulse  4s  ease-in-out  infinite; }
+  .drift     { animation: cloudDrift   6s  ease-in-out  infinite; }
+  .driftSlow { animation: cloudDrift   9s  ease-in-out  infinite; }
+
+  .drop1 { animation: fall 1.4s ease-in          infinite; }
+  .drop2 { animation: fall 1.4s ease-in  0.47s   infinite; }
+  .drop3 { animation: fall 1.4s ease-in  0.93s   infinite; }
+
+  .flake1 { animation: snowfall 2.2s ease-in         infinite; }
+  .flake2 { animation: snowfall 2.2s ease-in  0.73s  infinite; }
+  .flake3 { animation: snowfall 2.2s ease-in  1.47s  infinite; }
+
+  .lightning { animation: flash    3s ease-in-out  infinite; }
+
+  .fog1 { animation: fogFade 3s ease-in-out        infinite; }
+  .fog2 { animation: fogFade 3s ease-in-out  0.8s  infinite; }
+  .fog3 { animation: fogFade 3s ease-in-out  1.6s  infinite; }
+}

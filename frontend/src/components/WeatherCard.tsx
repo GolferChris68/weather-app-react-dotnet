@@ -2,6 +2,7 @@ import type { WeatherData } from '../types/weather';
 import { formatCoordinates } from '../utils/coordinates';
 import { TemperatureDisplay } from './TemperatureDisplay';
 import { WindDisplay } from './WindDisplay';
+import { WeatherIcon } from './WeatherIcon';
 import styles from './WeatherCard.module.css';
 
 type Props = {
@@ -22,7 +23,9 @@ export function WeatherCard({ data, latitude, longitude, onRefresh }: Props) {
 
   return (
     <div className={styles.card}>
-      <div className={styles.locationRow}>
+
+      {/* Zone 1 — full-width header */}
+      <div className={styles.header}>
         <p className={styles.location}>{locationDisplay}</p>
         {showAttribution && (
           <p className={styles.attribution}>
@@ -38,24 +41,33 @@ export function WeatherCard({ data, latitude, longitude, onRefresh }: Props) {
         )}
       </div>
 
-      <p className={styles.condition}>{data.weatherLabel}</p>
+      {/* Zone 2 — split body: icon left, data right */}
+      <div className={styles.body}>
+        <div className={styles.iconCol}>
+          <WeatherIcon weatherCode={data.weatherCode} />
+        </div>
+        <div className={styles.dataCol}>
+          <p className={styles.condition}>{data.weatherLabel}</p>
+          <TemperatureDisplay
+            fahrenheit={data.temperatureFahrenheit}
+            celsius={data.temperatureCelsius}
+          />
+          <WindDisplay
+            speedMph={data.windSpeedMph}
+            directionDegrees={data.windDirectionDegrees}
+            directionCardinal={data.windDirectionCardinal}
+          />
+        </div>
+      </div>
 
-      <TemperatureDisplay
-        fahrenheit={data.temperatureFahrenheit}
-        celsius={data.temperatureCelsius}
-      />
+      {/* Zone 3 — full-width footer */}
+      <div className={styles.footer}>
+        <p className={styles.fetchedAt}>Updated at {fetchedAt}</p>
+        <button className={styles.refreshButton} onClick={onRefresh} type="button">
+          Refresh
+        </button>
+      </div>
 
-      <WindDisplay
-        speedMph={data.windSpeedMph}
-        directionDegrees={data.windDirectionDegrees}
-        directionCardinal={data.windDirectionCardinal}
-      />
-
-      <p className={styles.fetchedAt}>Updated at {fetchedAt}</p>
-
-      <button className={styles.refreshButton} onClick={onRefresh} type="button">
-        Refresh
-      </button>
     </div>
   );
 }
